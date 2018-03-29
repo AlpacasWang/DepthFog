@@ -76,7 +76,7 @@ Shader "AlpacasWang/DepthFog"
         #endif 
 
         #if EXP2_ON
-        fogFactor =  exp(-_EXP2Density*depth);
+        fogFactor =  exp(-pow(_EXP2Density*depth,2));
         #endif 
 
         return lerp(tex2D(_MainTex,i.uv),_FogColor,fogFactor);
