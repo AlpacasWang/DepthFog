@@ -4,6 +4,10 @@ Shader "AlpacasWang/DepthFog"
   Properties
   {
     [HideInInspector]_MainTex ("Texture", 2D) = "white" {}
+
+    
+    [KeywordEnum(GAUSSIAN, LINEAR, EXP,EXP2,DEPTHMAP)] _TYPE("Type", Float) = 0
+
     [HideInInspector]_FogColor ("Fog Color", Color) = (1,1,1,1)
     [HideInInspector]_Focus("Focus",float) = 0.1
     [HideInInspector]_Rate("Rate",float) = 0.1
@@ -12,6 +16,7 @@ Shader "AlpacasWang/DepthFog"
     [HideInInspector]_LinearDensity("Linear Density",float) = 1
     [HideInInspector]_EXPDensity("EXP Density",float) = 0.1
     [HideInInspector]_EXP2Density("EXP2 Density",float) = 0.1
+
   }
   SubShader
   {
@@ -22,12 +27,8 @@ Shader "AlpacasWang/DepthFog"
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment frag
-      #pragma shader_feature GAUSSIAN_ON
-      #pragma shader_feature LINEAR_ON
-      #pragma shader_feature EXP_ON
-      #pragma shader_feature EXP2_ON
+      #pragma multi_compile _TYPE_GAUSSIAN _TYPE_LINEAR _TYPE_EXP _TYPE_EXP2 _TYPE_DEPTHMAP
       #include "UnityCG.cginc"
-
       struct appdata
       {
         float4 vertex : POSITION;
@@ -49,7 +50,7 @@ Shader "AlpacasWang/DepthFog"
       }
       
       sampler2D _MainTex;
-      sampler2D _DepthTexture;
+      sampler2D _CameraDepthNormalsTexture;
       fixed4 _FogColor;
       float _Focus;
       float _Rate;
@@ -59,24 +60,23 @@ Shader "AlpacasWang/DepthFog"
       float _EXP2Density;
       fixed4 frag (v2f i) : SV_Target
       {
-        fixed rawDepth = SAMPLE_DEPTH_TEXTURE(_DepthTexture, i.uv);
-        fixed depth = Linear01Depth(rawDepth);
+        half4 depthNormal = tex2D(_CameraDepthNormalsTexture, i.uv);
+        half depth;
+        half3 normal;
+        DecodeDepthNormal(depthNormal, depth, normal);
+        //fixed depth = Linear01Depth(rawDepth);
 
         float fogFactor = 1;
-        #if GAUSSIAN_ON
+        #ifdef _TYPE_GAUSSIAN
         fogFactor =  _Scale*exp(-_Rate*abs(_Focus-depth));
-        #endif 
-
-        #if LINEAR_ON
+        #elif _TYPE_LINEAR
         fogFactor =  _LinearDensity*depth;
-        #endif 
-
-        #if EXP_ON
-        fogFactor =  exp(-_EXPDensity*depth);
-        #endif 
-
-        #if EXP2_ON
-        fogFactor =  exp(-pow(_EXP2Density*depth,2));
+        #elif _TYPE_EXP
+        fogFactor =  1-exp(-_EXPDensity*depth);
+        #elif _TYPE_EXP2
+        fogFactor =  1-exp(-pow(_EXP2Density*depth,2));
+        #elif _TYPE_DEPTHMAP
+        return depth;
         #endif 
 
         return lerp(tex2D(_MainTex,i.uv),_FogColor,fogFactor);
