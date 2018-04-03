@@ -9,7 +9,7 @@ Shader "AlpacasWang/DepthFog"
     [KeywordEnum(GAUSSIAN, LINEAR, EXP,EXP2,DEPTHMAP)] _TYPE("Type", Float) = 0
 
     [HideInInspector]_FogColor ("Fog Color", Color) = (1,1,1,1)
-    [HideInInspector]_Focus("Focus",float) = 0.1
+    [HideInInspector]_Focus("Focus",Range(0,1)) = 0.1
     [HideInInspector]_Rate("Rate",float) = 0.1
     [HideInInspector]_Scale("Scale",float) = 1
 
@@ -17,6 +17,8 @@ Shader "AlpacasWang/DepthFog"
     [HideInInspector]_EXPDensity("EXP Density",float) = 0.1
     [HideInInspector]_EXP2Density("EXP2 Density",float) = 0.1
 
+    [HideInInspector]_Start("Start",Range(0,1)) = 0
+    [HideInInspector]_End("End",Range(0,1)) = 0.5
   }
   SubShader
   {
@@ -58,6 +60,8 @@ Shader "AlpacasWang/DepthFog"
       float _LinearDensity;
       float _EXPDensity;
       float _EXP2Density;
+      float _Start;
+      float _End;
       fixed4 frag (v2f i) : SV_Target
       {
         half4 depthNormal = tex2D(_CameraDepthNormalsTexture, i.uv);
@@ -65,18 +69,22 @@ Shader "AlpacasWang/DepthFog"
         half3 normal;
         DecodeDepthNormal(depthNormal, depth, normal);
         //fixed depth = Linear01Depth(rawDepth);
-
+        depth = clamp(depth,0,1);
+        if(depth<_Start||depth>_End){
+            return tex2D(_MainTex,i.uv);
+        }
+        half culledDepth = (depth-_Start)/(_End-_Start);
         float fogFactor = 1;
         #ifdef _TYPE_GAUSSIAN
-        fogFactor =  _Scale*exp(-_Rate*abs(_Focus-depth));
+        fogFactor =  _Scale*exp(-_Rate*abs(_Focus-culledDepth));
         #elif _TYPE_LINEAR
-        fogFactor =  _LinearDensity*depth;
+        fogFactor =  _LinearDensity*culledDepth;
         #elif _TYPE_EXP
-        fogFactor =  1-exp(-_EXPDensity*depth);
+        fogFactor =  1-exp(-_EXPDensity*culledDepth);
         #elif _TYPE_EXP2
-        fogFactor =  1-exp(-pow(_EXP2Density*depth,2));
+        fogFactor =  1-exp(-pow(_EXP2Density*culledDepth,2));
         #elif _TYPE_DEPTHMAP
-        return depth;
+        return culledDepth;
         #endif 
 
         return lerp(tex2D(_MainTex,i.uv),_FogColor,fogFactor);

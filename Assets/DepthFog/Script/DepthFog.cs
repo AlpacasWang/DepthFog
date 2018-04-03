@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
 
+[ExecuteInEditMode]
 public class DepthFog : MonoBehaviour
 {
     private Camera m_Camera;
@@ -12,7 +13,7 @@ public class DepthFog : MonoBehaviour
     void Start()
     {
         m_Camera = GetComponent<Camera>();
-        m_Camera.depthTextureMode |= DepthTextureMode.DepthNormals;
+        m_Camera.depthTextureMode  |= DepthTextureMode.DepthNormals;
     }
 
     [ImageEffectOpaque]

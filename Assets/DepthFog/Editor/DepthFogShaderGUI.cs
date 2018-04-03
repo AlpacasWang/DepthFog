@@ -19,21 +19,30 @@ public class DepthFogShaderGUI : ShaderGUI
                 DrawProperty(materialEditor, properties, "_Focus");
                 DrawProperty(materialEditor, properties, "_Rate");
                 DrawProperty(materialEditor, properties, "_Scale");
+                DrawProperty(materialEditor, properties, "_Start");
+                DrawProperty(materialEditor, properties, "_End");
                 break;
             case 1:
                 DrawProperty(materialEditor, properties, "_FogColor");
                 DrawProperty(materialEditor, properties, "_LinearDensity");
-
+                DrawProperty(materialEditor, properties, "_Start");
+                DrawProperty(materialEditor, properties, "_End");
                 break;
             case 2:
                 DrawProperty(materialEditor, properties, "_FogColor");
                 DrawProperty(materialEditor, properties, "_EXPDensity");
+                DrawProperty(materialEditor, properties, "_Start");
+                DrawProperty(materialEditor, properties, "_End");
                 break;
             case 3:
                 DrawProperty(materialEditor, properties, "_FogColor");
                 DrawProperty(materialEditor, properties, "_EXP2Density");
+                DrawProperty(materialEditor, properties, "_Start");
+                DrawProperty(materialEditor, properties, "_End");
                 break;
             default:
+                DrawProperty(materialEditor, properties, "_Start");
+                DrawProperty(materialEditor, properties, "_End");
                 break;
         }
 
